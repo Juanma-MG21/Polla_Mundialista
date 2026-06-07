@@ -12,13 +12,13 @@ export default function Dashboard () {
       </header>
 
       <main className='flex'>
-        <div className='bg-black/10 backdrop-blur-lg border-r border-blue-800/40 p-5 fixed top-0 left-0 w-56 h-screen'>
-        <h1 className='p-2 text-2xl text-center font-bold absolute animate-[shine_2s_linear_infinite] bg-gradient-to-r from-transparent via-yellow-300 to-transparent bg-[length:200%_100%] bg-clip-text text-transparent'>
+        <div className='bg-black/10 backdrop-blur-lg border-r border-blue-800/40 p-5 fixed top-0 left-0 w-56 h-screen '>
+        <h1 className='p-2 text-2xl text-center font-bold animate-[shine_2s_linear_infinite] bg-gradient-to-r from-transparent via-yellow-300 to-transparent bg-[length:200%_100%] bg-clip-text text-transparent'>
           EstadisticasYA!</h1>
           <ul className='flex flex-col gap-2 mt-20'>
             <li>
               <Link to="">
-                <button className='w-full p-3 rounded-lg border border-blue-800/40 text-sm font-semibold text-gray-400 cursor-pointer flex items-center gap-3 transform transition-all duration-300 hover:border-blue-400 hover:bg-blue-900/40 hover:text-white hover:scale-105 active:scale-95'>
+                <button className='w-full p-3 rounded-lg border border-green-800/40 text-sm font-semibold text-gray-400 cursor-pointer flex items-center gap-3 transform transition-all duration-300 hover:border-green-400 hover:bg-green-900/40 hover:text-white hover:scale-105 active:scale-95'>
                   <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
                     <circle cx="9" cy="7" r="4" />
@@ -32,7 +32,7 @@ export default function Dashboard () {
 
             <li>
               <Link to="">
-                <button className='w-full p-3 border border-blue-800/40 hover:border-blue-400 rounded-lg text-gray-400 hover:text-white text-sm font-semibold cursor-pointer transition-all duration-300 flex items-center gap-3 hover:bg-blue-900/40 hover:scale-[1.02] active:scale-[0.98]'>
+                <button className='w-full p-3 rounded-lg border border-green-800/40 text-sm font-semibold text-gray-400 cursor-pointer flex items-center gap-3 transform transition-all duration-300 hover:border-green-400 hover:bg-green-900/40 hover:text-white hover:scale-105 active:scale-95'>
                   <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <circle cx="12" cy="12" r="10" />
                     <polyline points="12 6 12 12 16 14" />
@@ -45,7 +45,7 @@ export default function Dashboard () {
 
             <li>
               <Link to="">
-                <button className='w-full p-3 border border-blue-800/40 hover:border-blue-400 rounded-lg text-gray-400 hover:text-white text-sm font-semibold cursor-pointer transition-all duration-300 flex items-center gap-3 hover:bg-blue-900/40 hover:scale-[1.02] active:scale-[0.98]'>
+                <button className='w-full p-3 rounded-lg border border-green-800/40 text-sm font-semibold text-gray-400 cursor-pointer flex items-center gap-3 transform transition-all duration-300 hover:border-green-400 hover:bg-green-900/40 hover:text-white hover:scale-105 active:scale-95'>
                   <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <polyline points="16 3 21 8 16 13" />
                     <line x1="21" y1="8" x2="9" y2="8" />
@@ -59,7 +59,7 @@ export default function Dashboard () {
 
             <li>
               <Link to="">
-                <button className='w-full p-3 border border-blue-800/40 hover:border-blue-400 rounded-lg text-gray-400 hover:text-white text-sm font-semibold cursor-pointer transition-all duration-300 flex items-center gap-3 hover:bg-blue-900/40 hover:scale-[1.02] active:scale-[0.98]'>
+              <button className='w-full p-3 rounded-lg border border-green-800/40 text-sm font-semibold text-gray-400 cursor-pointer flex items-center gap-3 transform transition-all duration-300 hover:border-green-400 hover:bg-green-900/40 hover:text-white hover:scale-105 active:scale-95'>
                   <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                     <circle cx="12" cy="7" r="4" />
@@ -70,23 +70,23 @@ export default function Dashboard () {
             </li>
           </ul>
 
-          <div className='border-1 border-gray-700 p-5 mt-96 mx-0 flex-col justify-center items-center rounded-lg'>
+          <div className='border border-gray-700 p-5 mt-96 mx-0 rounded-lg bg-white/20 backdrop-blur-lg'>
             <h1 className='text-white text-sm font-semibold cursor-pointer transition-all duration-300 flex items-center gap-3'>
               Bienvenido, Administrador.
             </h1>
 
-            <button className='w-full p-2 mt-1 border-red-600 rounded-lg text-red-400 text-white font-semibold cursor-pointer transition-all duration-300 flex items-center gap-3 bg-red-700 hover:bg-red-800/40 hover:scale-[1.02] active:scale-[0.98]'>
+            <button className='w-full p-2 mt-1 rounded-lg text-white font-semibold cursor-pointer transition-all duration-300 flex items-center gap-3 bg-red-700 hover:bg-red-800/40 hover:scale-[1.02] active:scale-[0.98]'>
               Cerrar sesion
             </button>
           </div>
         </div>
 
-        <section className='flex flex-wrap justify-around flex-1 p-10 gap-3 ml-56'>
-          <section className='bg-gradient-to-br from-green-950 to-blue-900 border-2 border-blue-600 rounded-lg p-5 w-96 h-96'>
+        <section className='flex flex-row justify-around flex-1 gap-3 ml-56 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 justify-center m-10'>
+          <section className='bg-white/20 backdrop-blur-md border-2 border-blue-300 flex flex-col rounded-xl m-5 p-10 text-white '>
             <h1 className='text-white font-bold text-xl text-center'>Usuarios</h1>
 
             <p className='text-white text-center mt-10 text-6xl font-bold'>
-              <p>Usuarios totales</p>
+              Usuarios totales
             </p>
 
             <p className='text-gray-300 text-center mt-4'>
@@ -94,7 +94,7 @@ export default function Dashboard () {
             </p>
           </section>
 
-          <section className='bg-gradient-to-br from-green-950 to-blue-900 border-2 border-blue-600 rounded-lg p-5 w-96 h-96'>
+          <section className='bg-white/20 backdrop-blur-md border-2 border-blue-300 flex flex-col rounded-xl m-5 p-10 text-white'>
             <h1 className='text-white font-bold text-xl text-center'>Movimientos</h1>
             <p className='text-white text-center mt-5'>
               Lorem ipsum dolor sit amet consectetur adipisicing elit. Error blanditiis voluptate nobis,
@@ -103,14 +103,25 @@ export default function Dashboard () {
             </p>
           </section>
 
-          <section className='bg-gradient-to-br from-green-950 to-blue-900 border-2 border-blue-600 rounded-lg p-5 w-96 h-96'>
+          <section className='bg-white/20 backdrop-blur-md border-2 border-blue-300 flex flex-col rounded-xl m-5 p-10 text-white'>
             <h1 className='text-white font-bold text-xl text-center'>Dependientes</h1>
             <p className='text-white text-center mt-10 text-6xl font-bold'>
-              <p>Total dependendientes</p>
+              Total Dependientes
             </p>
 
             <p className='text-gray-300 text-center mt-4'>
               Dependientes registrados
+            </p>
+          </section>
+          <section className='bg-white/20 backdrop-blur-md border-2 border-blue-300 flex flex-col rounded-xl m-5 p-10 text-white '>
+            <h1 className='text-white font-bold text-xl text-center'>Usuarios</h1>
+
+            <p className='text-white text-center mt-10 text-6xl font-bold'>
+              Usuarios totales
+            </p>
+
+            <p className='text-gray-300 text-center mt-4'>
+              Usuarios registrados
             </p>
           </section>
         </section>
