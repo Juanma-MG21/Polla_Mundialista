@@ -1,0 +1,384 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model chat_messages {
+  message_id   BigInt   @id @default(autoincrement())
+  room_id      BigInt
+  user_id      BigInt
+  message_text String
+  created_at   DateTime @default(now()) @db.Timestamp(6)
+  rooms        rooms    @relation(fields: [room_id], references: [room_id], onDelete: Cascade, map: "fk_chat_room")
+  users        users    @relation(fields: [user_id], references: [user_id], onDelete: Cascade, map: "fk_chat_user")
+
+  @@index([room_id], map: "idx_chat_room")
+}
+
+model injuries {
+  injury_id            BigInt    @id @default(autoincrement())
+  player_id            BigInt
+  injury_description   String    @db.VarChar(255)
+  start_date           DateTime  @db.Date
+  expected_return_date DateTime? @db.Date
+  is_active            Boolean   @default(true)
+  created_at           DateTime  @default(now()) @db.Timestamp(6)
+  players              players   @relation(fields: [player_id], references: [player_id], onDelete: Cascade, map: "fk_injuries_player")
+
+  @@index([player_id], map: "idx_injuries_player")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model market_results {
+  market_result_id BigInt    @id @default(autoincrement())
+  market_id        BigInt
+  result_status    String    @db.VarChar(20)
+  resolved_at      DateTime? @db.Timestamp(6)
+  created_at       DateTime  @default(now()) @db.Timestamp(6)
+  markets          markets   @relation(fields: [market_id], references: [market_id], onDelete: Cascade, map: "fk_market_result_market")
+}
+
+model market_types {
+  market_type_id BigInt    @id @default(autoincrement())
+  code           String    @unique @db.VarChar(50)
+  description    String?   @db.VarChar(255)
+  created_at     DateTime  @default(now()) @db.Timestamp(6)
+  markets        markets[]
+}
+
+model markets {
+  market_id             BigInt              @id @default(autoincrement())
+  match_id              BigInt
+  prediction_version_id BigInt
+  market_type_id        BigInt
+  player_id             BigInt?
+  probability           Decimal             @db.Decimal(6, 3)
+  points_value          Int
+  is_active             Boolean             @default(true)
+  created_at            DateTime            @default(now()) @db.Timestamp(6)
+  market_results        market_results[]
+  matches               matches             @relation(fields: [match_id], references: [match_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_market_match")
+  players               players?            @relation(fields: [player_id], references: [player_id], onUpdate: NoAction, map: "fk_market_player")
+  prediction_versions   prediction_versions @relation(fields: [prediction_version_id], references: [prediction_version_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_market_prediction")
+  market_types          market_types        @relation(fields: [market_type_id], references: [market_type_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_market_type")
+  ticket_events         ticket_events[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model matches {
+  match_id                          BigInt                  @id @default(autoincrement())
+  external_api_id                   BigInt?                 @unique
+  home_team_id                      BigInt
+  away_team_id                      BigInt
+  match_datetime                    DateTime                @db.Timestamp(6)
+  status                            String                  @default("SCHEDULED") @db.VarChar(30)
+  home_score                        Int?
+  away_score                        Int?
+  created_at                        DateTime                @default(now()) @db.Timestamp(6)
+  markets                           markets[]
+  teams_matches_away_team_idToteams teams                   @relation("matches_away_team_idToteams", fields: [away_team_id], references: [team_id], map: "fk_match_away")
+  teams_matches_home_team_idToteams teams                   @relation("matches_home_team_idToteams", fields: [home_team_id], references: [team_id], map: "fk_match_home")
+  prediction_versions               prediction_versions[]
+  room_match_selections             room_match_selections[]
+
+  @@index([away_team_id], map: "idx_matches_away")
+  @@index([home_team_id], map: "idx_matches_home")
+}
+
+model notifications {
+  notification_id   BigInt   @id @default(autoincrement())
+  room_id           BigInt?
+  user_id           BigInt?
+  notification_type String   @db.VarChar(50)
+  title             String   @db.VarChar(255)
+  message           String
+  is_read           Boolean  @default(false)
+  created_at        DateTime @default(now()) @db.Timestamp(6)
+  rooms             rooms?   @relation(fields: [room_id], references: [room_id], onDelete: Cascade, map: "fk_notifications_room")
+  users             users?   @relation(fields: [user_id], references: [user_id], onDelete: Cascade, map: "fk_notifications_user")
+
+  @@index([room_id], map: "idx_notifications_room")
+  @@index([user_id], map: "idx_notifications_user")
+}
+
+model player_ratings {
+  player_rating_id BigInt   @id @default(autoincrement())
+  player_id        BigInt
+  rating_date      DateTime @db.Date
+  fatigue_rating   Decimal  @db.Decimal(5, 2)
+  form_rating      Decimal  @db.Decimal(5, 2)
+  offensive_rating Decimal  @db.Decimal(5, 2)
+  final_rating     Decimal  @db.Decimal(5, 2)
+  created_at       DateTime @default(now()) @db.Timestamp(6)
+  players          players  @relation(fields: [player_id], references: [player_id], onDelete: Cascade, map: "fk_player_ratings_player")
+
+  @@unique([player_id, rating_date], map: "uq_player_rating_date")
+}
+
+model player_statistics {
+  player_statistic_id BigInt   @id @default(autoincrement())
+  player_id           BigInt
+  snapshot_date       DateTime @db.Date
+  matches_played      Int      @default(0)
+  minutes_played      Int      @default(0)
+  goals               Int      @default(0)
+  shots_on_target     Int      @default(0)
+  yellow_cards        Int      @default(0)
+  red_cards           Int      @default(0)
+  created_at          DateTime @default(now()) @db.Timestamp(6)
+  players             players  @relation(fields: [player_id], references: [player_id], onDelete: Cascade, map: "fk_player_statistics_player")
+
+  @@index([player_id], map: "idx_player_statistics_player")
+}
+
+model players {
+  player_id         BigInt              @id @default(autoincrement())
+  external_api_id   BigInt?             @unique
+  team_id           BigInt?
+  first_name        String              @db.VarChar(100)
+  last_name         String              @db.VarChar(100)
+  birth_date        DateTime?           @db.Date
+  position          String?             @db.VarChar(50)
+  is_active         Boolean             @default(true)
+  created_at        DateTime            @default(now()) @db.Timestamp(6)
+  injuries          injuries[]
+  markets           markets[]
+  player_ratings    player_ratings[]
+  player_statistics player_statistics[]
+  teams             teams?              @relation(fields: [team_id], references: [team_id], map: "fk_players_team")
+
+  @@index([team_id], map: "idx_players_team")
+}
+
+model poll_options {
+  poll_option_id BigInt       @id @default(autoincrement())
+  poll_id        BigInt
+  option_text    String       @db.VarChar(255)
+  created_at     DateTime     @default(now()) @db.Timestamp(6)
+  polls          polls        @relation(fields: [poll_id], references: [poll_id], onDelete: Cascade, map: "fk_poll_options_poll")
+  poll_votes     poll_votes[]
+
+  @@index([poll_id], map: "idx_poll_options_poll")
+}
+
+model poll_votes {
+  poll_vote_id   BigInt       @id @default(autoincrement())
+  poll_id        BigInt
+  poll_option_id BigInt
+  user_id        BigInt
+  voted_at       DateTime     @default(now()) @db.Timestamp(6)
+  poll_options   poll_options @relation(fields: [poll_option_id], references: [poll_option_id], onDelete: Cascade, map: "fk_poll_votes_option")
+  polls          polls        @relation(fields: [poll_id], references: [poll_id], onDelete: Cascade, map: "fk_poll_votes_poll")
+  users          users        @relation(fields: [user_id], references: [user_id], onDelete: Cascade, map: "fk_poll_votes_user")
+
+  @@unique([poll_id, user_id], map: "uq_user_vote")
+  @@index([poll_id], map: "idx_poll_votes_poll")
+  @@index([user_id], map: "idx_poll_votes_user")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model polls {
+  poll_id            BigInt         @id @default(autoincrement())
+  room_id            BigInt
+  created_by_user_id BigInt
+  title              String         @db.VarChar(255)
+  status             String         @default("OPEN") @db.VarChar(20)
+  created_at         DateTime       @default(now()) @db.Timestamp(6)
+  closed_at          DateTime?      @db.Timestamp(6)
+  poll_options       poll_options[]
+  poll_votes         poll_votes[]
+  users              users          @relation(fields: [created_by_user_id], references: [user_id], map: "fk_polls_creator")
+  rooms              rooms          @relation(fields: [room_id], references: [room_id], onDelete: Cascade, map: "fk_polls_room")
+
+  @@index([room_id], map: "idx_polls_room")
+}
+
+model prediction_versions {
+  prediction_version_id BigInt    @id @default(autoincrement())
+  match_id              BigInt
+  generated_at          DateTime  @db.Timestamp(6)
+  version_number        Int
+  is_active             Boolean   @default(true)
+  created_at            DateTime  @default(now()) @db.Timestamp(6)
+  markets               markets[]
+  matches               matches   @relation(fields: [match_id], references: [match_id], onDelete: Cascade, map: "fk_prediction_versions_match")
+
+  @@unique([match_id, version_number], map: "uq_prediction_version")
+}
+
+model roles {
+  role_id     BigInt   @id @default(autoincrement())
+  name        String   @unique @db.VarChar(50)
+  description String?  @db.VarChar(255)
+  created_at  DateTime @default(now()) @db.Timestamp(6)
+  users       users[]
+}
+
+model room_match_selections {
+  room_match_selection_id BigInt   @id @default(autoincrement())
+  room_id                 BigInt
+  match_id                BigInt
+  selected_by_user_id     BigInt
+  selected_at             DateTime @default(now()) @db.Timestamp(6)
+  matches                 matches  @relation(fields: [match_id], references: [match_id], onDelete: Cascade, map: "fk_room_match_match")
+  rooms                   rooms    @relation(fields: [room_id], references: [room_id], onDelete: Cascade, map: "fk_room_match_room")
+  users                   users    @relation(fields: [selected_by_user_id], references: [user_id], map: "fk_room_match_user")
+
+  @@unique([room_id, match_id], map: "uq_room_match")
+  @@index([match_id], map: "idx_room_match_match")
+  @@index([room_id], map: "idx_room_match_room")
+}
+
+model room_members {
+  room_member_id BigInt   @id @default(autoincrement())
+  room_id        BigInt
+  user_id        BigInt
+  joined_at      DateTime @default(now()) @db.Timestamp(6)
+  rooms          rooms    @relation(fields: [room_id], references: [room_id], onDelete: Cascade, map: "fk_room_members_room")
+  users          users    @relation(fields: [user_id], references: [user_id], onDelete: Cascade, map: "fk_room_members_user")
+
+  @@unique([room_id, user_id], map: "uq_room_member")
+  @@index([room_id], map: "idx_room_members_room")
+  @@index([user_id], map: "idx_room_members_user")
+}
+
+model rooms {
+  room_id               BigInt                  @id @default(autoincrement())
+  owner_user_id         BigInt
+  room_name             String                  @db.VarChar(100)
+  access_code           String                  @unique @db.VarChar(8)
+  is_active             Boolean                 @default(true)
+  created_at            DateTime                @default(now()) @db.Timestamp(6)
+  chat_messages         chat_messages[]
+  notifications         notifications[]
+  polls                 polls[]
+  room_match_selections room_match_selections[]
+  room_members          room_members[]
+  users                 users                   @relation(fields: [owner_user_id], references: [user_id], map: "fk_rooms_owner")
+  tickets               tickets[]
+
+  @@index([owner_user_id], map: "idx_rooms_owner")
+}
+
+model team_ratings {
+  team_rating_id    BigInt   @id @default(autoincrement())
+  team_id           BigInt
+  rating_date       DateTime @db.Date
+  offensive_rating  Decimal  @db.Decimal(5, 2)
+  defensive_rating  Decimal  @db.Decimal(5, 2)
+  contextual_rating Decimal  @db.Decimal(5, 2)
+  final_rating      Decimal  @db.Decimal(5, 2)
+  created_at        DateTime @default(now()) @db.Timestamp(6)
+  teams             teams    @relation(fields: [team_id], references: [team_id], onDelete: Cascade, map: "fk_team_ratings_team")
+
+  @@unique([team_id, rating_date], map: "uq_team_rating_date")
+}
+
+model team_statistics {
+  team_statistic_id BigInt   @id @default(autoincrement())
+  team_id           BigInt
+  snapshot_date     DateTime @db.Date
+  matches_played    Int      @default(0)
+  wins              Int      @default(0)
+  draws             Int      @default(0)
+  losses            Int      @default(0)
+  goals_for         Decimal  @default(0) @db.Decimal(6, 2)
+  goals_against     Decimal  @default(0) @db.Decimal(6, 2)
+  clean_sheets      Int      @default(0)
+  created_at        DateTime @default(now()) @db.Timestamp(6)
+  teams             teams    @relation(fields: [team_id], references: [team_id], onDelete: Cascade, map: "fk_team_statistics_team")
+
+  @@index([team_id], map: "idx_team_statistics_team")
+}
+
+model teams {
+  team_id                             BigInt            @id @default(autoincrement())
+  external_api_id                     BigInt?           @unique
+  team_name                           String            @unique @db.VarChar(100)
+  fifa_code                           String?           @db.VarChar(10)
+  country                             String            @db.VarChar(100)
+  is_active                           Boolean           @default(true)
+  created_at                          DateTime          @default(now()) @db.Timestamp(6)
+  matches_matches_away_team_idToteams matches[]         @relation("matches_away_team_idToteams")
+  matches_matches_home_team_idToteams matches[]         @relation("matches_home_team_idToteams")
+  players                             players[]
+  team_ratings                        team_ratings[]
+  team_statistics                     team_statistics[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model ticket_events {
+  ticket_event_id           BigInt   @id @default(autoincrement())
+  ticket_id                 BigInt
+  market_id                 BigInt
+  frozen_probability        Decimal  @db.Decimal(6, 3)
+  base_points               Int
+  rarity_bonus_points       Int      @default(0)
+  first_bettor_bonus_points Int      @default(0)
+  final_points              Int      @default(0)
+  event_result              String?  @default("PENDING") @db.VarChar(20)
+  created_at                DateTime @default(now()) @db.Timestamp(6)
+  markets                   markets  @relation(fields: [market_id], references: [market_id], onDelete: Cascade, map: "fk_ticket_event_market")
+  tickets                   tickets  @relation(fields: [ticket_id], references: [ticket_id], onDelete: Cascade, map: "fk_ticket_event_ticket")
+
+  @@index([market_id], map: "idx_ticket_events_market")
+  @@index([ticket_id], map: "idx_ticket_events_ticket")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model tickets {
+  ticket_id     BigInt          @id @default(autoincrement())
+  room_id       BigInt
+  user_id       BigInt
+  ticket_status String          @default("OPEN") @db.VarChar(20)
+  created_at    DateTime        @default(now()) @db.Timestamp(6)
+  closed_at     DateTime?       @db.Timestamp(6)
+  ticket_events ticket_events[]
+  rooms         rooms           @relation(fields: [room_id], references: [room_id], onDelete: Cascade, map: "fk_ticket_room")
+  users         users           @relation(fields: [user_id], references: [user_id], onDelete: Cascade, map: "fk_ticket_user")
+
+  @@index([room_id], map: "idx_tickets_room")
+  @@index([user_id], map: "idx_tickets_user")
+}
+
+model user_scores {
+  user_score_id       BigInt   @id @default(autoincrement())
+  user_id             BigInt   @unique
+  total_points        Int      @default(0)
+  total_events_played Int      @default(0)
+  total_events_won    Int      @default(0)
+  total_events_lost   Int      @default(0)
+  updated_at          DateTime @default(now()) @db.Timestamp(6)
+  users               users    @relation(fields: [user_id], references: [user_id], onDelete: Cascade, map: "fk_user_scores_user")
+
+  @@index([total_points(sort: Desc)], map: "idx_user_scores_points")
+}
+
+model users {
+  user_id               BigInt                  @id @default(autoincrement())
+  role_id               BigInt
+  username              String                  @unique @db.VarChar(50)
+  email                 String                  @unique @db.VarChar(255)
+  password_hash         String                  @db.VarChar(255)
+  first_name            String?                 @db.VarChar(100)
+  last_name             String?                 @db.VarChar(100)
+  is_active             Boolean                 @default(true)
+  created_at            DateTime                @default(now()) @db.Timestamp(6)
+  updated_at            DateTime                @default(now()) @db.Timestamp(6)
+  chat_messages         chat_messages[]
+  notifications         notifications[]
+  poll_votes            poll_votes[]
+  polls                 polls[]
+  room_match_selections room_match_selections[]
+  room_members          room_members[]
+  rooms                 rooms[]
+  tickets               tickets[]
+  user_scores           user_scores?
+  roles                 roles                   @relation(fields: [role_id], references: [role_id], map: "fk_users_role")
+
+  @@index([role_id], map: "idx_users_role")
+}
