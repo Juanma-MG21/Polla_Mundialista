@@ -3,6 +3,7 @@ import Index from './components/Index'
 import Dashboard from './components/Dashboard'
 import Login from  './components/Login'
 import GroupsWorldCup from './components/GroupsWorldCup'
+import Partidos from './components/Partidos'
 function App() {
   return (
     <BrowserRouter>
@@ -11,6 +12,8 @@ function App() {
         <Route path="/Dashboard" element={<Dashboard />} />
         <Route path="/Login" element={<Login />} />
         <Route path="/GroupsWorldCup" element={<GroupsWorldCup/>} />
+        <Route path="/Partidos" element={<Partidos/>} />
+        
         
       </Routes>
     </BrowserRouter>
