@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
+import { useLogout } from '../hooks/useLogout'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DATOS DE EJEMPLO — en producción vendrían de fetch('/api/matches/today')
@@ -643,7 +644,7 @@ function MatchRow({ match, onBet }) {
 // COMPONENTE PRINCIPAL: Partidos
 // ─────────────────────────────────────────────────────────────────────────────
 export default function Partidos() {
-  const navigate = useNavigate()
+  const handleLogout = useLogout()
 
   // filter: qué estado de partido mostrar ('all' | 'live' | 'upcoming' | 'finished')
   const [filter, setFilter] = useState('all')
@@ -750,9 +751,16 @@ export default function Partidos() {
                 <span className="text-red-400 text-xs font-black">{counts.live} EN VIVO</span>
               </div>
             )}
-            <Link to="/dashboard" className="border border-gray-800 hover:border-gray-600 text-gray-400 hover:text-white text-xs font-black px-3 py-2 rounded-lg transition-all uppercase tracking-wide">
-              Dashboard
+            <Link to="/Perfil" className="border border-gray-800 hover:border-gray-600 text-gray-400 hover:text-white text-xs font-black px-3 py-2 rounded-lg transition-all uppercase tracking-wide">
+              Mi perfil
             </Link>
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="border border-red-900/50 hover:border-red-700 bg-red-950/40 hover:bg-red-900/30 text-red-400 hover:text-red-300 text-xs font-black px-3 py-2 rounded-lg transition-all uppercase tracking-wide"
+            >
+              Cerrar sesión
+            </button>
           </div>
         </div>
       </nav>

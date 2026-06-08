@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom'
 import { useState } from 'react'
+import { useLogout } from '../hooks/useLogout'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DATOS DE EJEMPLO
@@ -76,11 +77,11 @@ const NAV_ITEMS = [
     ),
   },
   {
-    label: 'Apuestas',
-    path: '/dashboard/apuestas',
+    label: 'Usuarios',
+    path: '/Usuarios',
     icon: (
       <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
       </svg>
     ),
   },
@@ -223,6 +224,8 @@ function ActivityRow({ user, action, target, amount, time, win }) {
 //   currentPath → string: path actual para marcar el link activo
 // ─────────────────────────────────────────────────────────────────────────────
 function Sidebar({ isOpen, onClose, currentPath }) {
+  const handleLogout = useLogout()
+
   return (
     <>
       {/* Overlay oscuro — solo en mobile cuando el sidebar está abierto */}
@@ -341,7 +344,11 @@ function Sidebar({ isOpen, onClose, currentPath }) {
                 <p className="text-gray-500 text-[10px]">admin@mundialbet.com</p>
               </div>
             </div>
-            <button className="w-full flex items-center justify-center gap-2 bg-red-950/60 hover:bg-red-900/40 border border-red-900/50 text-red-400 text-xs font-black py-2 rounded-lg transition-all duration-200">
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="w-full flex items-center justify-center gap-2 bg-red-950/60 hover:bg-red-900/40 border border-red-900/50 text-red-400 text-xs font-black py-2 rounded-lg transition-all duration-200"
+            >
               {/* Ícono de salida */}
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>

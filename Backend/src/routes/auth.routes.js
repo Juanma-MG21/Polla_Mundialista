@@ -24,4 +24,32 @@ router.post("/login", authController.login);
  */
 router.get("/me", authMiddleware, authController.me);
 
+/**
+ * @route  GET /api/auth/usuarios
+ * @desc   Lista todos los usuarios (solo ADMIN)
+ * @access Privado
+ */
+router.get("/usuarios", authMiddleware, authController.getUsuarios);
+
+/**
+ * @route  GET /api/auth/roles
+ * @desc   Lista roles disponibles (solo ADMIN)
+ * @access Privado
+ */
+router.get("/roles", authMiddleware, authController.getRoles);
+
+/**
+ * @route  PUT /api/auth/usuarios/:userId
+ * @desc   Actualiza un usuario (solo ADMIN)
+ * @access Privado
+ */
+router.put("/usuarios/:userId", authMiddleware, authController.updateUsuario);
+
+/**
+ * @route  DELETE /api/auth/usuarios/:userId
+ * @desc   Elimina un usuario (solo ADMIN)
+ * @access Privado
+ */
+router.delete("/usuarios/:userId", authMiddleware, authController.deleteUsuario);
+
 module.exports = router;

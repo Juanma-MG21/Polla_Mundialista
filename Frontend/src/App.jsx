@@ -4,6 +4,8 @@ import Dashboard from './components/Dashboard'
 import Login from  './components/Login'
 import GroupsWorldCup from './components/GroupsWorldCup'
 import Partidos from './components/Partidos'
+import Perfil from './components/Perfil'
+import Usuarios from './components/Usuarios'
 function App() {
   return (
     <BrowserRouter>
@@ -13,8 +15,9 @@ function App() {
         <Route path="/Login" element={<Login />} />
         <Route path="/GroupsWorldCup" element={<GroupsWorldCup/>} />
         <Route path="/Partidos" element={<Partidos/>} />
-        
-        
+        <Route path="/Perfil" element={<Perfil/>} />
+        <Route path="/Usuarios" element={<Usuarios/>} />
+        <Route path="/usuarios" element={<Usuarios/>} />
       </Routes>
     </BrowserRouter>
   )

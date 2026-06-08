@@ -337,10 +337,7 @@ export default function Index() {
           <div className="hidden md:flex items-center gap-1">
             {/* Array de links. map() los convierte en elementos JSX */}
             {[
-              { label: 'Grupos', path: '/grupos' },
-              { label: 'En Vivo', path: '/live' },
-              { label: 'Favoritos', path: '/favoritos' },
-              { label: 'Estadísticas', path: '/stats' },
+              { label: 'Grupos', path: '/GroupsWorldCup' },
             ].map(({ label, path }) => (
               <Link
                 key={label}
@@ -361,7 +358,7 @@ export default function Index() {
               Entrar
             </Link>
             <Link
-              to="/register"
+              to="/login"
               className="bg-yellow-400 hover:bg-yellow-300 text-black text-sm font-black px-4 py-2 rounded-lg transition-all hover:scale-105 uppercase tracking-wide"
             >
               Registrarse
