@@ -1,158 +1,206 @@
 const prisma = require("../config/prisma");
 
 class MatchService {
-    /**
-     * Registra un nuevo partido programado entre dos equipos diferentes.
-     * @param {Object} matchData - Datos del partido.
-     */
     async createMatch(matchData) {
         const {
             home_team_id,
             away_team_id,
-            kickoff_at,
-            venue,
-            competition
+            match_datetime
         } = matchData;
 
         if (!home_team_id || !away_team_id) {
-            throw new Error("Ambos equipos (local y visitante) son obligatorios");
+            throw new Error(
+                "Ambos equipos son obligatorios"
+            );
         }
 
-        if (Number(home_team_id) === Number(away_team_id)) {
-            throw new Error("Un equipo no puede jugar contra sí mismo");
+        if (
+            Number(home_team_id) ===
+            Number(away_team_id)
+        ) {
+            throw new Error(
+                "Un equipo no puede jugar contra sí mismo"
+            );
         }
 
-        return await prisma.matches.create({
+        return prisma.matches.create({
             data: {
-                home_team_id: Number(home_team_id),
-                away_team_id: Number(away_team_id),
-                kickoff_at: kickoff_at ? new Date(kickoff_at) : new Date(),
-                venue: venue ? venue.trim() : null,
-                competition: competition ? competition.trim() : null,
+                home_team_id: BigInt(
+                    home_team_id
+                ),
+
+                away_team_id: BigInt(
+                    away_team_id
+                ),
+
+                match_datetime:
+                    match_datetime
+                        ? new Date(
+                              match_datetime
+                          )
+                        : new Date(),
+
                 status: "SCHEDULED"
             }
         });
     }
 
-    /**
-     * Obtiene los detalles de un partido específico incluyendo los datos de los equipos.
-     * @param {number|string} matchId - ID del partido.
-     */
     async getMatch(matchId) {
-        return await prisma.matches.findUnique({
+        return prisma.matches.findUnique({
             where: {
-                match_id: Number(matchId)
+                match_id: BigInt(matchId)
             },
             include: {
-                home_team: true, // Asegúrate de que coincida con la relación de tu schema.prisma
-                away_team: true
+                teams_matches_home_team_idToteams: true,
+                teams_matches_away_team_idToteams: true
             }
         });
     }
 
-    /**
-     * Obtiene todos los partidos históricos y agendados organizados cronológicamente.
-     */
     async getAllMatches() {
-        return await prisma.matches.findMany({
+        return prisma.matches.findMany({
             include: {
-                home_team: true,
-                away_team: true
+                teams_matches_home_team_idToteams: true,
+                teams_matches_away_team_idToteams: true
             },
             orderBy: {
-                kickoff_at: "asc"
+                match_datetime: "asc"
             }
         });
     }
 
-    /**
-     * Obtiene el listado de los próximos partidos con estado programado (SCHEDULED).
-     */
     async getUpcomingMatches() {
-        return await prisma.matches.findMany({
+        return prisma.matches.findMany({
             where: {
                 status: "SCHEDULED"
             },
             include: {
-                home_team: true,
-                away_team: true
+                teams_matches_home_team_idToteams: true,
+                teams_matches_away_team_idToteams: true
             },
             orderBy: {
-                kickoff_at: "asc"
+                match_datetime: "asc"
             }
         });
     }
 
-    /**
-     * Actualiza el marcador (goles) de un partido en juego o finalizado.
-     */
-    async updateScore(matchId, homeGoals, awayGoals) {
-        // Validación de existencia previa
-        const match = await prisma.matches.findUnique({
-            where: { match_id: Number(matchId) }
-        });
+    async updateScore(
+        matchId,
+        homeGoals,
+        awayGoals
+    ) {
+        const match =
+            await prisma.matches.findUnique({
+                where: {
+                    match_id:
+                        BigInt(matchId)
+                }
+            });
 
-        if (!match) throw new Error("Partido no encontrado");
+        if (!match) {
+            throw new Error(
+                "Partido no encontrado"
+            );
+        }
 
-        return await prisma.matches.update({
+        return prisma.matches.update({
             where: {
-                match_id: Number(matchId)
+                match_id:
+                    BigInt(matchId)
             },
             data: {
-                home_score: homeGoals !== undefined && homeGoals !== null ? Number(homeGoals) : null,
-                away_score: awayGoals !== undefined && awayGoals !== null ? Number(awayGoals) : null
+                home_score:
+                    homeGoals !== null &&
+                    homeGoals !== undefined
+                        ? Number(homeGoals)
+                        : null,
+
+                away_score:
+                    awayGoals !== null &&
+                    awayGoals !== undefined
+                        ? Number(awayGoals)
+                        : null
             }
         });
     }
 
-    /**
-     * Actualiza el estado actual del juego (LIVE, FINISHED, POSTPONED, etc.).
-     */
-    async updateStatus(matchId, status) {
-        const match = await prisma.matches.findUnique({
-            where: { match_id: Number(matchId) }
-        });
+    async updateStatus(
+        matchId,
+        status
+    ) {
+        const match =
+            await prisma.matches.findUnique({
+                where: {
+                    match_id:
+                        BigInt(matchId)
+                }
+            });
 
-        if (!match) throw new Error("Partido no encontrado");
+        if (!match) {
+            throw new Error(
+                "Partido no encontrado"
+            );
+        }
 
-        if (!status || !status.trim()) throw new Error("El estado es obligatorio");
+        if (
+            !status ||
+            !status.trim()
+        ) {
+            throw new Error(
+                "El estado es obligatorio"
+            );
+        }
 
-        return await prisma.matches.update({
+        return prisma.matches.update({
             where: {
-                match_id: Number(matchId)
+                match_id:
+                    BigInt(matchId)
             },
             data: {
-                status: status.trim().toUpperCase()
+                status:
+                    status
+                        .trim()
+                        .toUpperCase()
             }
         });
     }
 
-    /**
-     * Obtiene el historial de enfrentamientos directos entre dos equipos (Head-to-Head).
-     */
-    async getHeadToHead(teamA, teamB) {
-        return await prisma.matches.findMany({
+    async getHeadToHead(
+        teamA,
+        teamB
+    ) {
+        return prisma.matches.findMany({
             where: {
                 OR: [
                     {
-                        home_team_id: Number(teamA),
-                        away_team_id: Number(teamB)
+                        home_team_id:
+                            BigInt(teamA),
+
+                        away_team_id:
+                            BigInt(teamB)
                     },
                     {
-                        home_team_id: Number(teamB),
-                        away_team_id: Number(teamA)
+                        home_team_id:
+                            BigInt(teamB),
+
+                        away_team_id:
+                            BigInt(teamA)
                     }
                 ]
             },
+
             include: {
-                home_team: true,
-                away_team: true
+                teams_matches_home_team_idToteams: true,
+                teams_matches_away_team_idToteams: true
             },
+
             orderBy: {
-                kickoff_at: "desc" // Los más recientes primero
+                match_datetime:
+                    "desc"
             }
         });
     }
 }
 
-module.exports = new MatchService();
+module.exports =
+    new MatchService();

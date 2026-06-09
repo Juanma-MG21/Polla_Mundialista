@@ -1,113 +1,224 @@
 const prisma = require("../config/prisma");
 
 class PlayerService {
-    /**
-     * Obtiene todos los jugadores pertenecientes a un equipo específico.
-     * @param {number|string} teamId - ID del equipo.
-     */
-    async getPlayersByTeam(teamId) {
-        return await prisma.players.findMany({
-            where: {
-                team_id: Number(teamId)
+    async getAllPlayers() {
+        return prisma.players.findMany({
+            include: {
+                teams: true
             },
-            orderBy: {
-                player_name: "asc" // Los ordena alfabéticamente para facilitar la lectura
-            }
+            orderBy: [
+                {
+                    first_name: "asc"
+                },
+                {
+                    last_name: "asc"
+                }
+            ]
         });
     }
 
-    /**
-     * Obtiene los detalles de un jugador específico por su ID único.
-     * @param {number|string} playerId - ID del jugador.
-     */
-    async getPlayer(playerId) {
-        return await prisma.players.findUnique({
+    async getPlayersByTeam(teamId) {
+        return prisma.players.findMany({
             where: {
-                player_id: Number(playerId)
+                team_id: BigInt(teamId)
             },
             include: {
-                teams: true // Incluye de forma preventiva los datos del equipo al que pertenece
-            }
-        });
-    }
-
-    /**
-     * Registra un nuevo jugador en la base de datos asignándolo a un equipo.
-     * @param {Object} playerData - Objeto con los datos del jugador.
-     * @param {string} playerData.player_name - Nombre del jugador.
-     * @param {number|string} playerData.team_id - ID del equipo al que se unirá.
-     * @param {number} [playerData.jersey_number] - Número de camiseta (opcional).
-     */
-    async createPlayer(playerData) {
-        if (!playerData.player_name || !playerData.player_name.trim()) {
-            throw new Error("El nombre del jugador es obligatorio");
-        }
-        if (!playerData.team_id) {
-            throw new Error("El ID del equipo es obligatorio");
-        }
-
-        return await prisma.players.create({
-            data: {
-                player_name: playerData.player_name.trim(),
-                team_id: Number(playerData.team_id),
-                jersey_number: playerData.jersey_number ? Number(playerData.jersey_number) : undefined
-            }
-        });
-    }
-
-    /**
-     * Modifica los datos de un jugador existente.
-     * @param {number|string} playerId - ID del jugador a editar.
-     * @param {Object} playerData - Objeto con los nuevos datos.
-     */
-    async updatePlayer(playerId, playerData) {
-        // Verificar si el jugador existe antes de intentar actualizarlo
-        const playerExists = await this.getPlayer(playerId);
-        if (!playerExists) {
-            throw new Error("Jugador no encontrado");
-        }
-
-        // Construimos el objeto de actualización de forma limpia y segura
-        const updateData = {};
-        
-        if (playerData.player_name !== undefined) {
-            if (!playerData.player_name.trim()) throw new Error("El nombre no puede estar vacío");
-            updateData.player_name = playerData.player_name.trim();
-        }
-        
-        if (playerData.team_id !== undefined) {
-            updateData.team_id = Number(playerData.team_id);
-        }
-
-        if (playerData.jersey_number !== undefined) {
-            updateData.jersey_number = Number(playerData.jersey_number);
-        }
-
-        return await prisma.players.update({
-            where: {
-                player_id: Number(playerId)
+                teams: true
             },
-            data: updateData
+            orderBy: [
+                {
+                    first_name: "asc"
+                },
+                {
+                    last_name: "asc"
+                }
+            ]
         });
     }
 
-    /**
-     * Elimina un jugador de la base de datos por su ID.
-     * @param {number|string} playerId - ID del jugador a eliminar.
-     */
-    async deletePlayer(playerId) {
-        const playerExists = await this.getPlayer(playerId);
-        if (!playerExists) {
-            throw new Error("Jugador no encontrado");
+    async getPlayer(playerId) {
+        return prisma.players.findUnique({
+            where: {
+                player_id: BigInt(playerId)
+            },
+            include: {
+                teams: true,
+                injuries: true,
+                player_statistics: true,
+                player_ratings: true
+            }
+        });
+    }
+
+    async createPlayer(playerData) {
+        const {
+            first_name,
+            last_name,
+            birth_date,
+            position,
+            team_id
+        } = playerData;
+
+        if (!first_name?.trim()) {
+            throw new Error(
+                "El nombre es obligatorio"
+            );
         }
 
-        return await prisma.players.delete({
+        if (!last_name?.trim()) {
+            throw new Error(
+                "El apellido es obligatorio"
+            );
+        }
+
+        if (team_id) {
+            const team =
+                await prisma.teams.findUnique({
+                    where: {
+                        team_id: BigInt(team_id)
+                    }
+                });
+
+            if (!team) {
+                throw new Error(
+                    "Equipo no encontrado"
+                );
+            }
+        }
+
+        return prisma.players.create({
+            data: {
+                first_name:
+                    first_name.trim(),
+
+                last_name:
+                    last_name.trim(),
+
+                birth_date:
+                    birth_date
+                        ? new Date(
+                              birth_date
+                          )
+                        : null,
+
+                position:
+                    position?.trim() ||
+                    null,
+
+                team_id:
+                    team_id
+                        ? BigInt(team_id)
+                        : null
+            }
+        });
+    }
+
+    async updatePlayer(
+        playerId,
+        playerData
+    ) {
+        const player =
+            await prisma.players.findUnique({
+                where: {
+                    player_id:
+                        BigInt(playerId)
+                }
+            });
+
+        if (!player) {
+            throw new Error(
+                "Jugador no encontrado"
+            );
+        }
+
+        if (
+            playerData.team_id !==
+            undefined
+        ) {
+            if (
+                playerData.team_id !==
+                null
+            ) {
+                const team =
+                    await prisma.teams.findUnique(
+                        {
+                            where: {
+                                team_id:
+                                    BigInt(
+                                        playerData.team_id
+                                    )
+                            }
+                        }
+                    );
+
+                if (!team) {
+                    throw new Error(
+                        "Equipo no encontrado"
+                    );
+                }
+            }
+        }
+
+        return prisma.players.update({
             where: {
-                player_id: Number(playerId)
+                player_id:
+                    BigInt(playerId)
+            },
+
+            data: {
+                first_name:
+                    playerData.first_name?.trim(),
+
+                last_name:
+                    playerData.last_name?.trim(),
+
+                birth_date:
+                    playerData.birth_date
+                        ? new Date(
+                              playerData.birth_date
+                          )
+                        : undefined,
+
+                position:
+                    playerData.position
+                        ?.trim(),
+
+                team_id:
+                    playerData.team_id !==
+                    undefined
+                        ? playerData.team_id
+                            ? BigInt(
+                                  playerData.team_id
+                              )
+                            : null
+                        : undefined
+            }
+        });
+    }
+
+    async deletePlayer(playerId) {
+        const player =
+            await prisma.players.findUnique({
+                where: {
+                    player_id:
+                        BigInt(playerId)
+                }
+            });
+
+        if (!player) {
+            throw new Error(
+                "Jugador no encontrado"
+            );
+        }
+
+        return prisma.players.delete({
+            where: {
+                player_id:
+                    BigInt(playerId)
             }
         });
     }
 }
 
-// Exportamos la instancia única (Singleton)
-module.exports = new PlayerService();
+module.exports =
+    new PlayerService();

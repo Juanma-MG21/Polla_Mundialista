@@ -1,82 +1,82 @@
-const teamRatingService = require("../services/teamRating.service");
+const teamRatingService =
+    require("../services/teamRating.service");
 
 class TeamRatingController {
-    /**
-     * @route   POST /api/team-ratings
-     * @desc    Registra una nueva métrica / snapshot de rendimiento para un equipo
-     */
-    async create(req, res) {
+    async createSnapshot(
+        req,
+        res
+    ) {
         try {
-            const { team_id, offensive_rating, defensive_rating, context_rating } = req.body;
-
-            const rating = await teamRatingService.createSnapshot({
-                team_id,
-                offensive_rating,
-                defensive_rating,
-                context_rating
-            });
+            const result =
+                await teamRatingService.createSnapshot(
+                    req.body
+                );
 
             return res.status(201).json({
                 success: true,
-                message: "Métricas de rendimiento registradas correctamente",
-                data: rating
+                data: result
             });
         } catch (error) {
             return res.status(400).json({
                 success: false,
-                message: error.message
+                message:
+                    error.message
             });
         }
     }
 
-    /**
-     * @route   GET /api/team-ratings/latest/:teamId
-     * @desc    Obtiene la última calificación disponible de un equipo específico
-     */
-    async latest(req, res) {
+    async getLatestRating(
+        req,
+        res
+    ) {
         try {
-            const { teamId } = req.params;
-            const rating = await teamRatingService.getLatestRating(teamId);
+            const { teamId } =
+                req.params;
 
-            if (!rating) {
-                return res.status(404).json({
-                    success: false,
-                    message: "No se encontraron registros de rendimiento para este equipo"
-                });
-            }
+            const result =
+                await teamRatingService.getLatestRating(
+                    teamId
+                );
 
             return res.status(200).json({
                 success: true,
-                data: rating
+                data: result
             });
         } catch (error) {
             return res.status(500).json({
                 success: false,
-                message: error.message || "Error al recuperar la calificación del equipo"
+                message:
+                    error.message
             });
         }
     }
 
-    /**
-     * @route   GET /api/team-ratings/history/:teamId
-     * @desc    Obtiene el historial completo de evolución de calificaciones de un equipo
-     */
-    async history(req, res) {
+    async getHistory(
+        req,
+        res
+    ) {
         try {
-            const { teamId } = req.params;
-            const history = await teamRatingService.getHistory(teamId);
+            const { teamId } =
+                req.params;
+
+            const result =
+                await teamRatingService.getHistory(
+                    teamId
+                );
 
             return res.status(200).json({
                 success: true,
-                data: history
+                data: result
             });
         } catch (error) {
             return res.status(500).json({
                 success: false,
-                message: error.message || "Error al recuperar el historial de rendimiento"
+                message:
+                    error.message
             });
         }
     }
 }
 
-module.exports = new TeamRatingController();
+module.exports =
+    new TeamRatingController();

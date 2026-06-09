@@ -41,6 +41,14 @@ const playerRatingRoutes = require("./routes/playerRating.routes");
 app.use("/api/team-ratings", teamRatingRoutes);
 app.use("/api/player-ratings", playerRatingRoutes);
 
+const predictionRoutes =
+    require("./routes/prediction.routes");
+
+app.use(
+    "/api/predictions",
+    predictionRoutes
+);
+
 // Ruta de prueba
 app.get("/", (req, res) => {
   res.json({
