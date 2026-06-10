@@ -1,9 +1,12 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom"; // Importación añadida para evitar errores de compilación
+import { Link } from "react-router-dom";
+
+const API_BASE_URL = "http://localhost:3000/api";
 
 export default function Perfil() {
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("all"); // "all" | "won" | "lost" | "pending"
+  const [error, setError] = useState(null);
+  const [activeTab, setActiveTab] = useState("all");
   const [user, setUser] = useState({
     username: "",
     email: "",
@@ -13,69 +16,53 @@ export default function Perfil() {
   });
   const [bets, setBets] = useState([]);
 
-  const API_BASE_URL = "http://localhost:3000/api";
-
-  // Efecto para cargar los datos del perfil y el historial al montar el componente
   useEffect(() => {
     const fetchProfileData = async () => {
       const token = localStorage.getItem("token");
-      
+
       if (!token) {
-        console.error("No se encontró ningún token de autenticación.");
+        setError("Debes iniciar sesión para ver tu perfil");
         setLoading(false);
         return;
       }
 
       try {
         setLoading(true);
+        setError(null);
 
-        // 1. Petición paralela para optimizar tiempos de respuesta de la API
+        const headers = {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        };
+
         const [profileRes, betsRes] = await Promise.all([
-          fetch(`${API_BASE_URL}/auth/me`, {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${token}`,
-            },
-          }),
-          fetch(`${API_BASE_URL}/bets/history`, {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${token}`,
-            },
-          }),
+          fetch(`${API_BASE_URL}/auth/me`, { headers }),
+          fetch(`${API_BASE_URL}/bets/history`, { headers }),
         ]);
 
-        // 2. Procesamiento de la respuesta de perfil
         if (profileRes.ok) {
           const profileData = await profileRes.json();
-          // Adaptado al estándar de respuesta de tu backend ({ success: true, data: {...} })
           if (profileData.data) {
             setUser({
               username: profileData.data.username || "Usuario",
               email: profileData.data.email || "",
               first_name: profileData.data.first_name || "",
               last_name: profileData.data.last_name || "",
-              balance: profileData.data.balance ?? 0,
+              balance: profileData.data.user_scores?.total_points ?? 0,
             });
           }
         } else {
-          console.error("Error al obtener los datos del perfil");
+          setError("No se pudo cargar tu perfil");
         }
 
-        // 3. Procesamiento de la respuesta del historial de apuestas
         if (betsRes.ok) {
           const betsData = await betsRes.json();
           if (betsData.data && Array.isArray(betsData.data)) {
             setBets(betsData.data);
           }
-        } else {
-          console.error("Error al obtener el historial de apuestas");
         }
-
-      } catch (error) {
-        console.error("Error de conexión con el servidor:", error);
+      } catch {
+        setError("Error de conexión con el servidor");
       } finally {
         setLoading(false);
       }
@@ -90,6 +77,9 @@ export default function Perfil() {
   const lostBets = bets.filter((b) => b.status === "LOST").length;
   const pendingBets = bets.filter((b) => b.status === "PENDING").length;
   const totalInverted = bets.reduce((acc, curr) => acc + Number(curr.amount || 0), 0);
+
+  const formatPoints = (value) =>
+    Number(value || 0).toLocaleString("en-US", { maximumFractionDigits: 0 });
 
   // Filtrado de apuestas según la pestaña seleccionada
   const filteredBets = bets.filter((bet) => {
@@ -138,9 +128,9 @@ export default function Perfil() {
 
           <div className="flex items-center gap-4">
             <div className="bg-gray-950 border border-gray-800 rounded-xl px-4 py-1.5 text-right hidden sm:block">
-              <span className="block text-[9px] text-gray-500 font-bold uppercase tracking-wider">Mi Saldo</span>
+              <span className="block text-[9px] text-gray-500 font-bold uppercase tracking-wider">Mis Puntos</span>
               <span className="text-green-400 font-black text-sm">
-                ${user.balance.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                {loading ? "..." : formatPoints(user.balance)} pts
               </span>
             </div>
 
@@ -214,17 +204,22 @@ export default function Perfil() {
                 <p className="text-yellow-400 text-3xl font-black">{loading ? "..." : pendingBets}</p>
               </div>
               <div className="bg-gradient-to-b from-gray-900/60 to-black border border-gray-800 rounded-xl p-4 text-center col-span-2 md:col-span-1">
-                <p className="text-yellow-400 text-[10px] uppercase tracking-widest font-bold mb-1">Total Invertido</p>
-                <p className="text-yellow-400 text-3xl font-black">${loading ? "..." : totalInverted}</p>
+                <p className="text-yellow-400 text-[10px] uppercase tracking-widest font-bold mb-1">Puntos Apostados</p>
+                <p className="text-yellow-400 text-3xl font-black">{loading ? "..." : formatPoints(totalInverted)}</p>
               </div>
             </section>
 
-            {/* SECCIÓN DEL HISTORIAL DE APUESTAS */}
+            {error && (
+              <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-sm font-bold px-4 py-3 rounded-xl">
+                {error}
+              </div>
+            )}
+
             <section className="space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-800 pb-4">
                 <div>
                   <h3 className="text-xl font-black uppercase tracking-wide">Historial de Apuestas</h3>
-                  <p className="text-gray-500 text-xs">Consulta todas las operaciones ejecutadas en tu cuenta</p>
+                  <p className="text-gray-500 text-xs">Todas tus predicciones registradas en salas</p>
                 </div>
 
                 {/* Filtros por pestañas */}
@@ -260,7 +255,9 @@ export default function Perfil() {
                   </div>
                 ) : filteredBets.length === 0 ? (
                   <div className="bg-gray-900/20 border border-gray-800 rounded-xl p-10 text-center text-gray-500">
-                    No se encontraron boletos de apuestas en esta categoría.
+                    {activeTab === "all"
+                      ? "Aún no tienes apuestas registradas. Únete a una sala y crea tu primer ticket."
+                      : "No hay apuestas en esta categoría."}
                   </div>
                 ) : (
                   filteredBets.map((bet) => (
@@ -268,17 +265,29 @@ export default function Perfil() {
                       key={bet.bet_id}
                       className="bg-gradient-to-br from-gray-900/70 to-black/90 border border-gray-800/80 rounded-xl p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all hover:border-gray-700/60"
                     >
-                      {/* Detalles del Encuentro */}
                       <div className="space-y-2 flex-1">
-                        <div className="flex items-center gap-2 text-gray-500 text-[10px] uppercase font-bold tracking-widest">
+                        <div className="flex flex-wrap items-center gap-2 text-gray-500 text-[10px] uppercase font-bold tracking-widest">
                           <span>⚽ {bet.match?.competition || "Mundial 2026"}</span>
+                          {bet.room_name && (
+                            <>
+                              <span>•</span>
+                              <span className="text-yellow-400/80">{bet.room_name}</span>
+                            </>
+                          )}
                           <span>•</span>
-                          <span>{bet.created_at ? new Date(bet.created_at).toLocaleDateString() : "---"}</span>
+                          <span>
+                            {bet.created_at
+                              ? new Date(bet.created_at).toLocaleDateString("es-ES", {
+                                  day: "numeric",
+                                  month: "short",
+                                  year: "numeric",
+                                })
+                              : "---"}
+                          </span>
                         </div>
 
-                        {/* Marcador / Equipos */}
-                        <div className="flex items-center gap-3 text-base font-bold">
-                          <span className="text-xl">{bet.match?.home_team?.flag || "🏳️"}</span>
+                        <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-base font-bold">
+                          <span className="text-sm text-gray-400">{bet.match?.home_team?.flag}</span>
                           <span className="text-white">{bet.match?.home_team?.name || "Local"}</span>
                           <span className="text-yellow-400 bg-black/40 border border-gray-800 px-2 py-0.5 rounded text-xs">
                             {bet.match?.home_score !== null && bet.match?.home_score !== undefined
@@ -286,10 +295,9 @@ export default function Perfil() {
                               : "VS"}
                           </span>
                           <span className="text-white">{bet.match?.away_team?.name || "Visitante"}</span>
-                          <span className="text-xl">{bet.match?.away_team?.flag || "🏳️"}</span>
+                          <span className="text-sm text-gray-400">{bet.match?.away_team?.flag}</span>
                         </div>
 
-                        {/* Tu Pronóstico */}
                         <div className="text-xs">
                           <span className="text-gray-500">Tu predicción: </span>
                           <span className="text-green-400 font-bold uppercase tracking-wide">
@@ -298,16 +306,15 @@ export default function Perfil() {
                         </div>
                       </div>
 
-                      {/* Montos y Ganancias */}
                       <div className="flex items-center md:justify-end gap-6 border-t md:border-t-0 border-gray-800 pt-3 md:pt-0">
                         <div className="text-left md:text-right">
-                          <span className="block text-[9px] text-gray-500 font-bold uppercase tracking-wider">Importe</span>
-                          <span className="text-white font-black text-sm">${bet.amount}.00</span>
+                          <span className="block text-[9px] text-gray-500 font-bold uppercase tracking-wider">Puntos base</span>
+                          <span className="text-white font-black text-sm">{formatPoints(bet.amount)} pts</span>
                         </div>
 
                         <div className="text-left md:text-right">
                           <span className="block text-[9px] text-gray-500 font-bold uppercase tracking-wider">
-                            Retorno Potencial
+                            Puntos finales
                           </span>
                           <span
                             className={`font-black text-sm ${
@@ -318,7 +325,7 @@ export default function Perfil() {
                                 : "text-yellow-400"
                             }`}
                           >
-                            ${bet.potential_payout}.00
+                            {formatPoints(bet.potential_payout)} pts
                           </span>
                         </div>
 

@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useLogout } from '../hooks/useLogout'
+import { formatRelativeTime } from '../utils/time'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DATOS DE EJEMPLO
@@ -53,16 +54,6 @@ const STAT_CARDS = [
   },
 ]
 
-// Actividad reciente — simulando movimientos reales de la plataforma
-// En producción: fetch('/api/movements?limit=5')
-const RECENT_ACTIVITY = [
-  { user: 'juan_m92',     action: 'Apuesta', target: 'Brasil vs Argentina',  amount: '+$50.00',  time: 'hace 2 min',  win: true  },
-  { user: 'carlos_bet',   action: 'Retiro',  target: 'Billetera principal',   amount: '-$120.00', time: 'hace 5 min',  win: false },
-  { user: 'sofia_wc26',   action: 'Apuesta', target: 'Francia vs Alemania',  amount: '+$30.00',  time: 'hace 8 min',  win: true  },
-  { user: 'pedro_gol',    action: 'Depósito',target: 'Ingreso de fondos',     amount: '+$200.00', time: 'hace 12 min', win: true  },
-  { user: 'ana_futbol',   action: 'Apuesta', target: 'Portugal vs Marruecos', amount: '+$75.00',  time: 'hace 18 min', win: true  },
-]
-
 // Links del sidebar con sus iconos SVG y ruta destino
 // Separamos los datos de la UI para que sea fácil agregar/quitar items
 const NAV_ITEMS = [
@@ -87,7 +78,7 @@ const NAV_ITEMS = [
   },
   {
     label: 'Movimientos',
-    path: '/dashboard/movimientos',
+    path: '/Movimientos',
     icon: (
       <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
         <polyline points="16 3 21 8 16 13"/><line x1="21" y1="8" x2="9" y2="8"/>
@@ -343,7 +334,7 @@ function Sidebar({ isOpen, onClose, currentPath }) {
                 <p className="text-white text-xs font-bold">Administrador</p>
                 <p className="text-gray-500 text-[10px]">admin@mundialbet.com</p>
               </div>
-            </div>
+            </div>ñ
             <button
               type="button"
               onClick={handleLogout}
@@ -367,14 +358,39 @@ function Sidebar({ isOpen, onClose, currentPath }) {
 // COMPONENTE PRINCIPAL: Dashboard
 // ─────────────────────────────────────────────────────────────────────────────
 export default function Dashboard() {
-  // sidebarOpen controla si el drawer del sidebar está abierto en mobile
-  // En desktop el sidebar siempre está visible (controlado por CSS, no por este estado)
   const [sidebarOpen, setSidebarOpen] = useState(false)
-
-  // useLocation() nos da el objeto de ubicación actual del router
-  // location.pathname es el path actual, ej: "/dashboard" o "/dashboard/usuarios"
-  // Lo usamos para marcar el link activo en el sidebar
+  const [recentActivity, setRecentActivity] = useState([])
   const location = useLocation()
+
+  useEffect(() => {
+    const fetchMovements = async () => {
+      const token = localStorage.getItem('token')
+      if (!token) return
+
+      try {
+        const res = await fetch('http://localhost:3000/api/movements?limit=5', {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        const data = await res.json()
+        if (data.success && Array.isArray(data.data)) {
+          setRecentActivity(
+            data.data.map((m) => ({
+              user: m.user,
+              action: m.action,
+              target: m.target,
+              amount: m.amount,
+              time: formatRelativeTime(m.created_at),
+              win: m.win,
+            }))
+          )
+        }
+      } catch {
+        setRecentActivity([])
+      }
+    }
+
+    fetchMovements()
+  }, [])
 
   return (
     // h-screen overflow-hidden: el layout ocupa exactamente la pantalla
@@ -480,21 +496,23 @@ export default function Dashboard() {
                   Actividad Reciente
                 </h2>
                 <Link
-                  to="/dashboard/movimientos"
+                  to="/Movimientos"
                   className="text-yellow-400 hover:text-yellow-300 text-xs font-black uppercase tracking-wider transition-colors"
                 >
                   Ver todo →
                 </Link>
               </div>
 
-              {/* Lista de movimientos */}
               <div className="p-2">
-                {/* RECENT_ACTIVITY.map() convierte el array en filas de actividad */}
-                {RECENT_ACTIVITY.map((item, i) => (
-                  // key={i}: usamos el índice como key porque los datos son estáticos
-                  // En datos reales deberías usar el ID del movimiento
-                  <ActivityRow key={i} {...item} />
-                ))}
+                {recentActivity.length === 0 ? (
+                  <p className="text-gray-600 text-xs text-center py-8 uppercase tracking-widest font-bold">
+                    Sin movimientos recientes
+                  </p>
+                ) : (
+                  recentActivity.map((item, i) => (
+                    <ActivityRow key={i} {...item} />
+                  ))
+                )}
               </div>
 
               {/* Footer de la sección */}

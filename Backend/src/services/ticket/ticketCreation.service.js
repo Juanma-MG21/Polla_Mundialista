@@ -1,7 +1,7 @@
 const prisma = require("../../config/prisma");
-const pointsCalculator = require("../resolution/pointsCalculator.service");
-const rarityBonus = require("../resolution/rarityBonus.service");
-const firstBettorBonus = require("../resolution/firstBettorBonus.service");
+const pointsCalculator = require("../scoring/pointsCalculator.service");
+const rarityBonus = require("../scoring/rarityBonus.service");
+const firstBettorBonus = require("../scoring/firstBettorBonus.service");
 const notificationService = require("../notification.service");
 
 const MAX_MATCHES = 3;

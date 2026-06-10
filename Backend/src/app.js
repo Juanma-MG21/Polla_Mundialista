@@ -49,6 +49,21 @@ app.use(
     predictionRoutes
 );
 
+const roomRoutes = require("./routes/room.routes");
+app.use("/api/rooms", roomRoutes);
+
+const ticketCreationRoutes = require("./routes/ticketCreation.routes");
+app.use("/api/tickets", ticketCreationRoutes);
+
+const notificationRoutes = require("./routes/notification.routes");
+app.use("/api/notifications", notificationRoutes);
+
+const betRoutes = require("./routes/bet.routes");
+app.use("/api/bets", betRoutes);
+
+const movementsRoutes = require("./routes/movements.routes");
+app.use("/api/movements", movementsRoutes);
+
 // Ruta de prueba
 app.get("/", (req, res) => {
   res.json({

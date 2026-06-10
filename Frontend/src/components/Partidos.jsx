@@ -754,6 +754,9 @@ export default function Partidos() {
             <Link to="/Perfil" className="border border-gray-800 hover:border-gray-600 text-gray-400 hover:text-white text-xs font-black px-3 py-2 rounded-lg transition-all uppercase tracking-wide">
               Mi perfil
             </Link>
+            <Link to="/Salas" className="border border-gray-800 hover:border-gray-600 text-gray-400 hover:text-white text-xs font-black px-3 py-2 rounded-lg transition-all uppercase tracking-wide">
+              Salas aqui!
+            </Link>
             <button
               type="button"
               onClick={handleLogout}

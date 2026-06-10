@@ -6,6 +6,11 @@ import GroupsWorldCup from './components/GroupsWorldCup'
 import Partidos from './components/Partidos'
 import Perfil from './components/Perfil'
 import Usuarios from './components/Usuarios'
+import Salas from './components/Salas'
+import SalaDetalle from './components/SalaDetalle'
+import CrearTicket from './components/CrearTicket'
+import Movimientos from './components/Movimientos'
+
 function App() {
   return (
     <BrowserRouter>
@@ -17,7 +22,11 @@ function App() {
         <Route path="/Partidos" element={<Partidos/>} />
         <Route path="/Perfil" element={<Perfil/>} />
         <Route path="/Usuarios" element={<Usuarios/>} />
-        <Route path="/usuarios" element={<Usuarios/>} />
+        <Route path="/Movimientos" element={<Movimientos />} />
+        <Route path="/dashboard/movimientos" element={<Movimientos />} />
+        <Route path="/salas" element={<Salas />} />
+        <Route path="/salas/:roomId" element={<SalaDetalle />} />
+        <Route path="/salas/:roomId/ticket" element={<CrearTicket />} />
       </Routes>
     </BrowserRouter>
   )
