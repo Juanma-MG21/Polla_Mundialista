@@ -26,15 +26,14 @@ class HistoricalService {
         let totalGoalsFor = 0;
         let totalGoalsAgainst = 0;
 
+        let totalMatches = 0;
+
         for (const stat of statistics) {
             const wins =
                 Number(stat.wins);
 
             const draws =
                 Number(stat.draws);
-
-            const losses =
-                Number(stat.losses);
 
             const matchesPlayed =
                 Number(
@@ -57,6 +56,9 @@ class HistoricalService {
                 Number(
                     stat.goals_against
                 );
+
+            totalMatches +=
+                matchesPlayed;
         }
 
         const pointsRatio =
@@ -65,16 +67,20 @@ class HistoricalService {
                   totalPossiblePoints
                 : 0.5;
 
-        const goalDifference =
-            totalGoalsFor -
-            totalGoalsAgainst;
+        const avgGoalDifference =
+            totalMatches > 0
+                ? (
+                      totalGoalsFor -
+                      totalGoalsAgainst
+                  ) / totalMatches
+                : 0;
 
         const goalModifier =
             Math.max(
                 -10,
                 Math.min(
                     10,
-                    goalDifference
+                    avgGoalDifference * 5
                 )
             );
 
@@ -83,14 +89,14 @@ class HistoricalService {
             20 +
             goalModifier;
 
-        return Math.max(
-            0,
-            Math.min(
-                100,
-                Number(
-                    score.toFixed(2)
+        return Number(
+            Math.max(
+                0,
+                Math.min(
+                    100,
+                    score
                 )
-            )
+            ).toFixed(2)
         );
     }
 }

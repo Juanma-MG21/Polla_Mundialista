@@ -2,74 +2,83 @@ const prisma = require("../../config/prisma");
 
 class RecentFormService {
     async calculate(teamId) {
-        const matches = await prisma.matches.findMany({
-            where: {
-                status: "FINISHED",
-                OR: [
-                    {
-                        home_team_id: Number(teamId)
-                    },
-                    {
-                        away_team_id: Number(teamId)
-                    }
-                ]
-            },
-            orderBy: {
-                match_datetime: "desc"
-            },
-            take: 5
-        });
+        const statistics =
+            await prisma.team_statistics.findMany({
+                where: {
+                    team_id: BigInt(teamId)
+                },
+                orderBy: {
+                    snapshot_date: "desc"
+                },
+                take: 5
+            });
 
-        if (!matches.length) {
+        if (
+            !statistics ||
+            statistics.length === 0
+        ) {
             return 50;
         }
 
-        let points = 0;
-        let goalsFor = 0;
-        let goalsAgainst = 0;
+        let weightedScore = 0;
+        let totalWeight = 0;
 
-        for (const match of matches) {
-            const isHome =
-                match.home_team_id === Number(teamId);
+        for (
+            let i = 0;
+            i < statistics.length;
+            i++
+        ) {
+            const stat = statistics[i];
 
-            const scored = isHome
-                ? match.home_score
-                : match.away_score;
+            const weight =
+                statistics.length - i;
 
-            const conceded = isHome
-                ? match.away_score
-                : match.home_score;
+            const matches =
+                Number(
+                    stat.matches_played
+                );
 
-            goalsFor += scored || 0;
-            goalsAgainst += conceded || 0;
+            if (matches === 0) {
+                continue;
+            }
 
-            if (scored > conceded) points += 3;
-            else if (scored === conceded) points += 1;
+            const wins =
+                Number(stat.wins);
+
+            const draws =
+                Number(stat.draws);
+
+            const points =
+                wins * 3 + draws;
+
+            const maxPoints =
+                matches * 3;
+
+            const performance =
+                maxPoints > 0
+                    ? points /
+                      maxPoints
+                    : 0.5;
+
+            weightedScore +=
+                performance * weight;
+
+            totalWeight += weight;
         }
 
-        const maxPoints = matches.length * 3;
+        if (totalWeight === 0) {
+            return 50;
+        }
 
-        const pointsRate =
-            (points / maxPoints) * 100;
-
-        const goalBalance =
-            goalsFor - goalsAgainst;
-
-        const goalFactor =
-            Math.max(
-                0,
-                Math.min(
-                    100,
-                    50 + goalBalance * 5
-                )
-            );
-
-        const finalScore =
-            pointsRate * 0.70 +
-            goalFactor * 0.30;
-
-        return Number(finalScore.toFixed(2));
+        return Number(
+            (
+                (weightedScore /
+                    totalWeight) *
+                100
+            ).toFixed(2)
+        );
     }
 }
 
-module.exports = new RecentFormService();
+module.exports =
+    new RecentFormService();

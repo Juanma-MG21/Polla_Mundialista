@@ -23,6 +23,33 @@ class MatchService {
             );
         }
 
+        const [homeTeam, awayTeam] =
+            await Promise.all([
+                prisma.teams.findUnique({
+                    where: {
+                        team_id: BigInt(home_team_id)
+                    }
+                }),
+
+                prisma.teams.findUnique({
+                    where: {
+                        team_id: BigInt(away_team_id)
+                    }
+                })
+            ]);
+
+        if (!homeTeam) {
+            throw new Error(
+                "Equipo local no encontrado"
+            );
+        }
+
+        if (!awayTeam) {
+            throw new Error(
+                "Equipo visitante no encontrado"
+            );
+        }
+
         return prisma.matches.create({
             data: {
                 home_team_id: BigInt(
@@ -103,6 +130,26 @@ class MatchService {
             );
         }
 
+        if (
+            homeGoals !== null &&
+            homeGoals !== undefined &&
+            Number(homeGoals) < 0
+        ) {
+            throw new Error(
+                "Los goles locales no pueden ser negativos"
+            );
+        }
+
+        if (
+            awayGoals !== null &&
+            awayGoals !== undefined &&
+            Number(awayGoals) < 0
+        ) {
+            throw new Error(
+                "Los goles visitantes no pueden ser negativos"
+            );
+        }
+
         return prisma.matches.update({
             where: {
                 match_id:
@@ -128,6 +175,36 @@ class MatchService {
         matchId,
         status
     ) {
+        if (
+            !status ||
+            !status.trim()
+        ) {
+            throw new Error(
+                "El estado es obligatorio"
+            );
+        }
+
+        const validStatuses = [
+            "SCHEDULED",
+            "LIVE",
+            "FINISHED",
+            "POSTPONED",
+            "CANCELLED"
+        ];
+
+        const normalizedStatus =
+            status.trim().toUpperCase();
+
+        if (
+            !validStatuses.includes(
+                normalizedStatus
+            )
+        ) {
+            throw new Error(
+                "Estado inválido"
+            );
+        }
+
         const match =
             await prisma.matches.findUnique({
                 where: {
@@ -142,15 +219,6 @@ class MatchService {
             );
         }
 
-        if (
-            !status ||
-            !status.trim()
-        ) {
-            throw new Error(
-                "El estado es obligatorio"
-            );
-        }
-
         return prisma.matches.update({
             where: {
                 match_id:
@@ -158,9 +226,7 @@ class MatchService {
             },
             data: {
                 status:
-                    status
-                        .trim()
-                        .toUpperCase()
+                    normalizedStatus
             }
         });
     }

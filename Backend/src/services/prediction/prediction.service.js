@@ -26,7 +26,7 @@ class PredictionService {
         const match =
             await prisma.matches.findUnique({
                 where: {
-                    match_id: Number(matchId)
+                    match_id: BigInt(matchId)
                 }
             });
 
@@ -49,8 +49,7 @@ class PredictionService {
             homeRecentForm,
             awayRecentForm,
 
-            homeOpponentStrength,
-            awayOpponentStrength,
+            strengthIndexes,
 
             homeMomentum,
             awayMomentum,
@@ -77,10 +76,7 @@ class PredictionService {
             ),
 
             opponentStrengthService.calculate(
-                homeTeamId
-            ),
-
-            opponentStrengthService.calculate(
+                homeTeamId,
                 awayTeamId
             ),
 
@@ -113,7 +109,7 @@ class PredictionService {
                 homeRecentForm,
 
             opponentStrength:
-                homeOpponentStrength,
+                strengthIndexes.home,
 
             momentum:
                 homeMomentum,
@@ -133,7 +129,7 @@ class PredictionService {
                 awayRecentForm,
 
             opponentStrength:
-                awayOpponentStrength,
+                strengthIndexes.away,
 
             momentum:
                 awayMomentum,
@@ -152,7 +148,8 @@ class PredictionService {
             );
 
         return {
-            matchId,
+            matchId:
+                String(matchId),
 
             generatedAt:
                 new Date(),

@@ -64,114 +64,137 @@ class MarketService {
     }
 
     async create(data) {
-        const match =
-            await prisma.matches.findUnique({
-                where: {
-                    match_id:
-                        BigInt(data.match_id)
-                }
-            });
-
-        if (!match) {
-            throw new Error(
-                "Partido no encontrado"
-            );
-        }
-
-        const marketType =
-            await prisma.market_types.findUnique(
-                {
-                    where: {
-                        market_type_id:
-                            BigInt(
-                                data.market_type_id
-                            )
-                    }
-                }
-            );
-
-        if (!marketType) {
-            throw new Error(
-                "Tipo de mercado no encontrado"
-            );
-        }
-
-        const predictionVersion =
-            await prisma.prediction_versions.findUnique(
-                {
-                    where: {
-                        prediction_version_id:
-                            BigInt(
-                                data.prediction_version_id
-                            )
-                    }
-                }
-            );
-
-        if (!predictionVersion) {
-            throw new Error(
-                "Versión de predicción no encontrada"
-            );
-        }
-
-        if (data.player_id) {
-            const player =
-                await prisma.players.findUnique(
-                    {
-                        where: {
-                            player_id:
-                                BigInt(
-                                    data.player_id
-                                )
-                        }
-                    }
-                );
-
-            if (!player) {
-                throw new Error(
-                    "Jugador no encontrado"
-                );
-            }
-        }
-
-        return prisma.markets.create({
-            data: {
+    const [
+        match,
+        marketType,
+        predictionVersion
+    ] = await Promise.all([
+        prisma.matches.findUnique({
+            where: {
                 match_id:
-                    BigInt(data.match_id),
+                    BigInt(data.match_id)
+            }
+        }),
 
-                prediction_version_id:
-                    BigInt(
-                        data.prediction_version_id
-                    ),
-
+        prisma.market_types.findUnique({
+            where: {
                 market_type_id:
                     BigInt(
                         data.market_type_id
-                    ),
-
-                player_id:
-                    data.player_id
-                        ? BigInt(
-                              data.player_id
-                          )
-                        : null,
-
-                probability:
-                    Number(
-                        data.probability
-                    ),
-
-                points_value:
-                    Number(
-                        data.points_value
-                    ),
-
-                is_active:
-                    data.is_active ??
-                    true
+                    )
             }
-        });
+        }),
+
+        prisma.prediction_versions.findUnique({
+            where: {
+                prediction_version_id:
+                    BigInt(
+                        data.prediction_version_id
+                    )
+            }
+        })
+    ]);
+
+    if (!match) {
+        throw new Error(
+            "Partido no encontrado"
+        );
     }
+
+    if (!marketType) {
+        throw new Error(
+            "Tipo de mercado no encontrado"
+        );
+    }
+
+    if (!predictionVersion) {
+        throw new Error(
+            "Versión de predicción no encontrada"
+        );
+    }
+
+    if (
+        predictionVersion.match_id !==
+        BigInt(data.match_id)
+    ) {
+        throw new Error(
+            "La versión de predicción no pertenece al partido"
+        );
+    }
+
+    if (data.player_id) {
+        const player =
+            await prisma.players.findUnique({
+                where: {
+                    player_id:
+                        BigInt(
+                            data.player_id
+                        )
+                }
+            });
+
+        if (!player) {
+            throw new Error(
+                "Jugador no encontrado"
+            );
+        }
+    }
+
+    if (
+        Number(data.probability) < 0 ||
+        Number(data.probability) > 100
+    ) {
+        throw new Error(
+            "La probabilidad debe estar entre 0 y 100"
+        );
+    }
+
+    if (
+        Number(data.points_value) < 0
+    ) {
+        throw new Error(
+            "Los puntos deben ser mayores o iguales a 0"
+        );
+    }
+
+    return prisma.markets.create({
+        data: {
+            match_id:
+                BigInt(data.match_id),
+
+            prediction_version_id:
+                BigInt(
+                    data.prediction_version_id
+                ),
+
+            market_type_id:
+                BigInt(
+                    data.market_type_id
+                ),
+
+            player_id:
+                data.player_id
+                    ? BigInt(
+                          data.player_id
+                      )
+                    : null,
+
+            probability:
+                Number(
+                    data.probability
+                ),
+
+            points_value:
+                Number(
+                    data.points_value
+                ),
+
+            is_active:
+                data.is_active ??
+                true
+        }
+    });
+}
 
     async update(
         marketId,

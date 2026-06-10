@@ -73,6 +73,26 @@ class MarketTypeService {
             );
         }
 
+        if (
+            data.code &&
+            data.code.trim() !==
+                marketType.code
+        ) {
+            const existing =
+                await prisma.market_types.findUnique({
+                    where: {
+                        code:
+                            data.code.trim()
+                    }
+                });
+
+            if (existing) {
+                throw new Error(
+                    "Ya existe un tipo de mercado con ese código"
+                );
+            }
+        }
+
         return prisma.market_types.update({
             where: {
                 market_type_id:

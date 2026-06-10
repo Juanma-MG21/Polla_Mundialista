@@ -2,108 +2,144 @@ class ProbabilityService {
     normalize(value) {
         return Math.max(
             0,
-            Math.min(100, Number(value))
+            Math.min(
+                100,
+                Number(value)
+            )
         );
     }
 
-    calculate(homeIndexes, awayIndexes) {
+    calculate(
+        homeIndexes,
+        awayIndexes
+    ) {
         const homeScore =
-            homeIndexes.historical * 0.20 +
-            homeIndexes.recentForm * 0.25 +
-            homeIndexes.opponentStrength * 0.15 +
-            homeIndexes.momentum * 0.15 +
-            homeIndexes.squadStability * 0.15 +
-            homeIndexes.context * 0.10;
+            homeIndexes.historical *
+                0.20 +
+            homeIndexes.recentForm *
+                0.25 +
+            homeIndexes
+                .opponentStrength *
+                0.15 +
+            homeIndexes.momentum *
+                0.15 +
+            homeIndexes
+                .squadStability *
+                0.15 +
+            homeIndexes.context *
+                0.10;
 
         const awayScore =
-            awayIndexes.historical * 0.20 +
-            awayIndexes.recentForm * 0.25 +
-            awayIndexes.opponentStrength * 0.15 +
-            awayIndexes.momentum * 0.15 +
-            awayIndexes.squadStability * 0.15 +
-            awayIndexes.context * 0.10;
+            awayIndexes.historical *
+                0.20 +
+            awayIndexes.recentForm *
+                0.25 +
+            awayIndexes
+                .opponentStrength *
+                0.15 +
+            awayIndexes.momentum *
+                0.15 +
+            awayIndexes
+                .squadStability *
+                0.15 +
+            awayIndexes.context *
+                0.10;
+
+        const total =
+            homeScore + awayScore;
+
+        if (total <= 0) {
+            return {
+                homeScore: 50,
+                awayScore: 50,
+                probabilities: {
+                    homeWin: 33.33,
+                    draw: 33.34,
+                    awayWin: 33.33
+                }
+            };
+        }
+
+        const homeBase =
+            (homeScore / total) *
+            100;
+
+        const awayBase =
+            (awayScore / total) *
+            100;
 
         const difference =
-            homeScore - awayScore;
+            Math.abs(
+                homeBase -
+                    awayBase
+            );
 
-        let homeWin;
-        let draw;
-        let awayWin;
+        let draw =
+            30 -
+            difference * 0.4;
 
-        if (Math.abs(difference) <= 5) {
-            homeWin = 35;
-            draw = 30;
-            awayWin = 35;
-        }
-        else if (difference > 0) {
-            homeWin =
-                Math.min(
-                    75,
-                    50 + difference * 0.8
-                );
+        draw = Math.max(
+            10,
+            Math.min(
+                30,
+                draw
+            )
+        );
 
-            awayWin =
-                Math.max(
-                    10,
-                    40 - difference * 0.6
-                );
+        let remaining =
+            100 - draw;
 
-            draw =
-                100 -
-                homeWin -
-                awayWin;
-        }
-        else {
-            const absDiff =
-                Math.abs(difference);
+        let homeWin =
+            (homeBase /
+                (homeBase +
+                    awayBase)) *
+            remaining;
 
-            awayWin =
-                Math.min(
-                    75,
-                    50 + absDiff * 0.8
-                );
+        let awayWin =
+            (awayBase /
+                (homeBase +
+                    awayBase)) *
+            remaining;
 
-            homeWin =
-                Math.max(
-                    10,
-                    40 - absDiff * 0.6
-                );
+        const adjustment =
+            100 /
+            (
+                homeWin +
+                draw +
+                awayWin
+            );
 
-            draw =
-                100 -
-                homeWin -
-                awayWin;
-        }
+        homeWin *= adjustment;
+        awayWin *= adjustment;
+        draw *= adjustment;
 
         return {
-            homeScore:
-                Number(
-                    homeScore.toFixed(2)
-                ),
+            homeScore: Number(
+                homeScore.toFixed(2)
+            ),
 
-            awayScore:
-                Number(
-                    awayScore.toFixed(2)
-                ),
+            awayScore: Number(
+                awayScore.toFixed(2)
+            ),
 
             probabilities: {
-                homeWin:
-                    Number(
-                        this.normalize(homeWin)
-                            .toFixed(2)
-                    ),
+                homeWin: Number(
+                    this.normalize(
+                        homeWin
+                    ).toFixed(2)
+                ),
 
-                draw:
-                    Number(
-                        this.normalize(draw)
-                            .toFixed(2)
-                    ),
+                draw: Number(
+                    this.normalize(
+                        draw
+                    ).toFixed(2)
+                ),
 
-                awayWin:
-                    Number(
-                        this.normalize(awayWin)
-                            .toFixed(2)
-                    )
+                awayWin: Number(
+                    this.normalize(
+                        awayWin
+                    ).toFixed(2)
+                )
             }
         };
     }

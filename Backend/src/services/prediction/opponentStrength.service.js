@@ -1,74 +1,84 @@
 const prisma = require("../../config/prisma");
 
 class OpponentStrengthService {
-    async calculate(teamId) {
-        const matches = await prisma.matches.findMany({
-            where: {
-                status: "FINISHED",
-                OR: [
-                    {
-                        home_team_id: Number(teamId)
-                    },
-                    {
-                        away_team_id: Number(teamId)
-                    }
-                ]
-            },
-            orderBy: {
-                match_datetime: "desc"
-            },
-            take: 10
-        });
-
-        if (!matches.length) {
-            return 50;
-        }
-
-        const opponentIds = matches.map((match) => {
-            return match.home_team_id === Number(teamId)
-                ? match.away_team_id
-                : match.home_team_id;
-        });
-
-        const ratings =
-            await prisma.team_ratings.findMany({
+    async calculate(
+        homeTeamId,
+        awayTeamId
+    ) {
+        const [
+            homeRating,
+            awayRating
+        ] = await Promise.all([
+            prisma.team_ratings.findFirst({
                 where: {
-                    team_id: {
-                        in: opponentIds
-                    }
+                    team_id:
+                        BigInt(
+                            homeTeamId
+                        )
                 },
                 orderBy: {
-                    rating_date: "desc"
+                    rating_date:
+                        "desc"
                 }
-            });
+            }),
 
-        if (!ratings.length) {
-            return 50;
+            prisma.team_ratings.findFirst({
+                where: {
+                    team_id:
+                        BigInt(
+                            awayTeamId
+                        )
+                },
+                orderBy: {
+                    rating_date:
+                        "desc"
+                }
+            })
+        ]);
+
+        const homeValue =
+            homeRating
+                ? Number(
+                      homeRating.final_rating
+                  )
+                : 50;
+
+        const awayValue =
+            awayRating
+                ? Number(
+                      awayRating.final_rating
+                  )
+                : 50;
+
+        const total =
+            homeValue + awayValue;
+
+        if (total === 0) {
+            return {
+                home: 50,
+                away: 50
+            };
         }
 
-        const latestRatings = new Map();
+        return {
+            home: Number(
+                (
+                    (homeValue /
+                        total) *
+                    100
+                ).toFixed(2)
+            ),
 
-        for (const rating of ratings) {
-            if (!latestRatings.has(rating.team_id)) {
-                latestRatings.set(
-                    rating.team_id,
-                    Number(rating.final_rating)
-                );
-            }
-        }
-
-        const values = [
-            ...latestRatings.values()
-        ];
-
-        const average =
-            values.reduce(
-                (sum, value) => sum + value,
-                0
-            ) / values.length;
-
-        return Number(average.toFixed(2));
+            away: Number(
+                (
+                    (awayValue /
+                        total) *
+                    100
+                ).toFixed(2)
+            )
+        };
     }
 }
 
-module.exports = new OpponentStrengthService();
+module.exports =
+    new OpponentStrengthService();
