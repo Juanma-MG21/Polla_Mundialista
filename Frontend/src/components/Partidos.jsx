@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { useLogout } from '../hooks/useLogout'
-
 // ─────────────────────────────────────────────────────────────────────────────
 // DATOS DE EJEMPLO — en producción vendrían de fetch('/api/matches/today')
 // ─────────────────────────────────────────────────────────────────────────────

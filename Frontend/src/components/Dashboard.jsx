@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useLogout } from '../hooks/useLogout'
+import { fetchCurrentUser, getUserDisplayName } from '../utils/auth'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DATOS DE EJEMPLO
@@ -225,6 +226,15 @@ function ActivityRow({ user, action, target, amount, time, win }) {
 // ─────────────────────────────────────────────────────────────────────────────
 function Sidebar({ isOpen, onClose, currentPath }) {
   const handleLogout = useLogout()
+  const [user, setUser] = useState(null)
+
+  useEffect(() => {
+    fetchCurrentUser().then(setUser)
+  }, [])
+
+  const displayName = getUserDisplayName(user)
+  const userEmail = user?.email || 'Sin correo'
+  const userInitial = displayName[0]?.toUpperCase() || 'U'
 
   return (
     <>
@@ -337,11 +347,11 @@ function Sidebar({ isOpen, onClose, currentPath }) {
             <div className="flex items-center gap-3 mb-3">
               {/* Avatar del admin */}
               <div className="w-9 h-9 rounded-full bg-yellow-400/20 border border-yellow-400/40 flex items-center justify-center text-yellow-400 font-black text-sm">
-                A
+                {userInitial}
               </div>
               <div>
-                <p className="text-white text-xs font-bold">Administrador</p>
-                <p className="text-gray-500 text-[10px]">admin@mundialbet.com</p>
+                <p className="text-white text-xs font-bold">{displayName}</p>
+                <p className="text-gray-500 text-[10px] truncate">{userEmail}</p>
               </div>
             </div>
             <button
